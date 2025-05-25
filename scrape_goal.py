@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import traceback
 
 def scrape_livescore():
     url = "https://www.livescore.com/en/football/live/"
@@ -9,7 +10,10 @@ def scrape_livescore():
     }
 
     try:
+        print(f"📡 اتصال به: {url}")
         response = requests.get(url, headers=headers)
+        print(f"📶 وضعیت پاسخ: {response.status_code}")
+
         if response.status_code != 200:
             print(f"❌ خطا در دریافت داده‌ها: {response.status_code}")
             return
@@ -18,6 +22,8 @@ def scrape_livescore():
         matches = []
 
         match_blocks = soup.find_all("div", class_="match-row__data")
+        print(f"🔍 تعداد بازی پیدا شده: {len(match_blocks)}")
+
         for block in match_blocks:
             try:
                 teams = block.find_all("div", class_="match-row__team-name")
@@ -36,7 +42,8 @@ def scrape_livescore():
                     "league": league,
                     "country": "LiveScore"
                 })
-            except:
+            except Exception as e:
+                print(f"⚠️ خطا در خواندن یک بازی: {e}")
                 continue
 
         with open("matches.json", "w", encoding="utf-8") as f:
@@ -45,7 +52,8 @@ def scrape_livescore():
         print(f"✅ {len(matches)} بازی ذخیره شد.")
 
     except Exception as e:
-        print(f"❌ خطای کلی در scraper: {e}")
+        print("❌ خطای کلی:")
+        traceback.print_exc()
 
 if __name__ == "__main__":
     scrape_livescore()
