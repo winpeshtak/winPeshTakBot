@@ -1,7 +1,6 @@
 import telebot
 from config import TOKEN
 from telebot import types
-from football_api import get_today_matches
 
 bot = telebot.TeleBot(TOKEN)
 
