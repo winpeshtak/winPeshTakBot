@@ -3,6 +3,7 @@ from config import TOKEN
 from telebot import types
 import json
 import subprocess
+import os
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -44,8 +45,18 @@ def handle_menu(message):
 
     elif message.text == "📊 بازی‌های امروز":
         bot.send_message(message.chat.id, "📥 در حال دریافت بازی‌های امروز...")
+
         try:
-            subprocess.run(["python", "scrape_goal.py"], check=True)
+            if not os.path.exists("scrape_goal.py"):
+                bot.send_message(message.chat.id, "❌ فایل scrape_goal.py پیدا نشد!")
+                return
+
+            subprocess.run(["python3", "scrape_goal.py"], check=True)
+
+            if not os.path.exists("matches.json"):
+                bot.send_message(message.chat.id, "❌ فایل matches.json پیدا نشد!")
+                return
+
             with open("matches.json", "r", encoding="utf-8") as f:
                 matches = json.load(f)
 
@@ -57,6 +68,8 @@ def handle_menu(message):
                     text += f"🕒 {m['time']} | {m['home']} vs {m['away']} ({m['league']}, {m['country']})\n"
                 bot.send_message(message.chat.id, text)
 
+        except subprocess.CalledProcessError as e:
+            bot.send_message(message.chat.id, f"❌ خطا در اجرای scraper: {e}")
         except Exception as e:
             bot.send_message(message.chat.id, f"❌ خطا در دریافت بازی‌ها: {e}")
 
