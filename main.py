@@ -1,6 +1,8 @@
 import telebot
 from config import TOKEN
 from telebot import types
+import json
+import subprocess
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -42,11 +44,24 @@ def handle_menu(message):
 
     elif message.text == "📊 بازی‌های امروز":
         bot.send_message(message.chat.id, "📥 در حال دریافت بازی‌های امروز...")
-        analysis = get_today_matches()
-        bot.send_message(message.chat.id, analysis)
+        try:
+            subprocess.run(["python", "scrape_goal.py"], check=True)
+            with open("matches.json", "r", encoding="utf-8") as f:
+                matches = json.load(f)
+
+            if not matches:
+                bot.send_message(message.chat.id, "❌ بازی‌ای برای امروز پیدا نشد.")
+            else:
+                text = "🎯 بازی‌های امروز:\n\n"
+                for m in matches:
+                    text += f"🕒 {m['time']} | {m['home']} vs {m['away']} ({m['league']}, {m['country']})\n"
+                bot.send_message(message.chat.id, text)
+
+        except Exception as e:
+            bot.send_message(message.chat.id, f"❌ خطا در دریافت بازی‌ها: {e}")
 
     else:
         bot.send_message(message.chat.id, "دستور نامعتبره. لطفاً از منو استفاده کنید.")
 
-print("✅ ربات با منوی اصلی اجرا شد. منتظر پیام هستم...")
+print("✅ ربات اجرا شد. منتظر پیام هستم...")
 bot.infinity_polling()
